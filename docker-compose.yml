@@ -3,27 +3,22 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    image: carrental-app
-    container_name: carrental-app
+    image: docker-app
+    container_name: docker-app
     restart: unless-stopped
     working_dir: /var/www
     volumes:
       - ./src:/var/www
     networks:
-      - carrental-net
+      - app-net
     depends_on:
       - mysql
-    environment:
-        MYSQL_ROOT_PASSWORD: ${DB_PASSWORD:-root}
-        MYSQL_DATABASE: ${DB_DATABASE:-carrental}
-        MYSQL_USER: ${DB_USERNAME:-root}
-        MYSQL_PASSWORD: ${DB_PASSWORD:-root}
     expose:
       - 9000
 
   nginx:
     image: nginx:latest
-    container_name: carrental-nginx
+    container_name: app-nginx
     restart: unless-stopped
     ports:
       - "80:80"
@@ -33,24 +28,29 @@ services:
     depends_on:
       - app
     networks:
-      - carrental-net
+      - app-net
 
   mysql:
     image: mysql:8.4
-    container_name: carrental-mysql
+    container_name: app-mysql
     restart: unless-stopped
     env_file:
       - ./src/.env
+    environment:
+      MYSQL_ROOT_PASSWORD: ${DB_PASSWORD:-root}
+      MYSQL_DATABASE: ${DB_DATABASE:-app}
+      MYSQL_USER: ${DB_USERNAME:-kevin}
+      MYSQL_PASSWORD: ${DB_PASSWORD:-password}
     ports:
       - "3306:3306"
     volumes:
       - mysql-data:/var/lib/mysql
     networks:
-      - carrental-net
+      - app-net
 
   phpmyadmin:
     image: phpmyadmin/phpmyadmin
-    container_name: carrental-phpmyadmin
+    container_name: app-phpmyadmin
     restart: unless-stopped
     environment:
       PMA_HOST: mysql
@@ -60,21 +60,21 @@ services:
     depends_on:
       - mysql
     networks:
-      - carrental-net
+      - app-net
 
   smtp4dev:
     image: rnwood/smtp4dev
-    container_name: carrental-smtp4dev
+    container_name: app-smtp4dev
     restart: unless-stopped
     ports:
       - "2525:25"
       - "3000:80"
     networks:
-      - carrental-net
+      - app-net
 
 volumes:
   mysql-data:
 
 networks:
-  carrental-net:
+  app-net:
     driver: bridge
